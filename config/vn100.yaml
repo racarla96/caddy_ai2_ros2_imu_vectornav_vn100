@@ -7,7 +7,7 @@ vectornav:
     port: "/dev/vn100"
     baud: 115200
     reconnect_ms: 500
-    frame_id: "vectornav"
+    frame_id: "imu_vn100_link"   # = robot_params.yaml sensors.imu_vn100.frame_id
 vn_sensor_msgs:
   ros__parameters:
     use_enu: true   # ENU (REP-103) en vez de NED nativo del VN-100

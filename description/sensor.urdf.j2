@@ -1,0 +1,78 @@
+{#-
+  URDF fragment for the VectorNav VN-100: IMU + magnetometer + barometer on one body.
+  Same convention as the other sensor packages (rendered by spawn_robot.launch.py, type 'imu').
+
+  Always required:
+    prefix, sensor_name, frame_id, x, y, z, roll, pitch, yaw (pose relative to base_link)
+  Required when gazebo=true:
+    namespace, update_rate, noise_enabled, gyro_mean, gyro_stddev, accel_mean, accel_stddev
+  Optional (defaults = VN-100 datasheet order of magnitude):
+    gyro_bias_stddev, accel_bias_stddev, mag_stddev, pressure_stddev
+#}
+  <link name="{{ prefix }}{{ frame_id }}">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.015"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+    <visual>
+      <geometry><box size="0.036 0.033 0.009"/></geometry>
+    </visual>
+  </link>
+
+  <joint name="{{ prefix }}{{ sensor_name }}_joint" type="fixed">
+    <parent link="{{ prefix }}base_link"/>
+    <child link="{{ prefix }}{{ frame_id }}"/>
+    <origin xyz="{{ x }} {{ y }} {{ z }}" rpy="{{ roll }} {{ pitch }} {{ yaw }}"/>
+  </joint>
+
+  <gazebo reference="{{ prefix }}{{ sensor_name }}_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+{%- if gazebo | default(false) %}
+{%- set ns_prefix = ('/' + namespace + '/') if namespace else '/' %}
+
+  <gazebo reference="{{ prefix }}{{ frame_id }}">
+    <sensor name="{{ prefix }}{{ sensor_name }}_imu" type="imu">
+      <topic>{{ ns_prefix }}vectornav/imu</topic>
+      <update_rate>{{ update_rate }}</update_rate>
+      <always_on>true</always_on>
+      <imu>
+{%- if noise_enabled %}
+        <angular_velocity>
+{%- for a in ['x', 'y', 'z'] %}
+          <{{ a }}><noise type="gaussian"><mean>{{ gyro_mean | default(0.0) }}</mean><stddev>{{ gyro_stddev | default(5e-4) }}</stddev><bias_mean>0.0</bias_mean><bias_stddev>{{ gyro_bias_stddev | default(1e-5) }}</bias_stddev></noise></{{ a }}>
+{%- endfor %}
+        </angular_velocity>
+        <linear_acceleration>
+{%- for a in ['x', 'y', 'z'] %}
+          <{{ a }}><noise type="gaussian"><mean>{{ accel_mean | default(0.0) }}</mean><stddev>{{ accel_stddev | default(1.4e-2) }}</stddev><bias_mean>0.0</bias_mean><bias_stddev>{{ accel_bias_stddev | default(1e-3) }}</bias_stddev></noise></{{ a }}>
+{%- endfor %}
+        </linear_acceleration>
+{%- endif %}
+      </imu>
+    </sensor>
+
+    <sensor name="{{ prefix }}{{ sensor_name }}_magnetometer" type="magnetometer">
+      <topic>{{ ns_prefix }}vectornav/magnetic</topic>
+      <update_rate>{{ update_rate }}</update_rate>
+      <always_on>true</always_on>
+      <magnetometer>
+{%- for a in ['x', 'y', 'z'] %}
+        <{{ a }}><noise type="gaussian"><mean>0.0</mean><stddev>{{ mag_stddev | default(1e-7) }}</stddev></noise></{{ a }}>
+{%- endfor %}
+      </magnetometer>
+    </sensor>
+
+    <sensor name="{{ prefix }}{{ sensor_name }}_pressure" type="air_pressure">
+      <topic>{{ ns_prefix }}vectornav/pressure</topic>
+      <update_rate>{{ update_rate }}</update_rate>
+      <always_on>true</always_on>
+      <air_pressure>
+        <reference_altitude>0</reference_altitude>
+        <pressure><noise type="gaussian"><mean>0.0</mean><stddev>{{ pressure_stddev | default(10.0) }}</stddev></noise></pressure>
+      </air_pressure>
+    </sensor>
+  </gazebo>
+{%- endif %}

@@ -1,4 +1,4 @@
 [submodule "third_party/vectornav"]
 	path = third_party/vectornav
-	url = https://github.com/dawonn/vectornav.git
+	url = https://github.com/racarla96/vectornav.git
 	branch = ros2

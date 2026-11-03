@@ -1,0 +1,12 @@
+# VectorNav VN-100 — parámetros de simulación (leídos por spawn_robot.launch.py, type: imu).
+# La pose de montaje y frame_id viven en caddy_ai2_ros2_description/bringup/config/robot_params.yaml.
+# Ruido aproximado (hoja de datos VN-100 x raíz del ancho de banda a 100 Hz); afinar con Allan variance.
+simulation:
+  update_rate: 100
+  noise:
+    gyro:
+      mean: 0.0
+      stddev: 5.0e-4
+    accel:
+      mean: 0.0
+      stddev: 1.4e-2
