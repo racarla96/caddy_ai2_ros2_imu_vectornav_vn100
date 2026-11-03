@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!-- VectorNav VN-100 simulado en Gazebo Harmonic (IMU + magnetómetro + presión).
+     Uso:
+       <xacro:include filename="$(find caddy_ai2_ros2_imu_vectornav_vn100)/urdf/vn100.urdf.xacro"/>
+       <xacro:vn100 name="vn100" parent="base_link" xyz="0 0 0.3" rpy="0 0 0"/>
+     Los topics Gazebo (gz_ns/imu, gz_ns/magnetic, gz_ns/pressure) los puentea
+     launch/vn100_sim.launch.py a los nombres del driver real. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="vn100" params="name:=vn100 parent xyz:='0 0 0' rpy:='0 0 0'
+                                    frame_id:=vectornav gz_ns:=vectornav
+                                    update_rate:=100">
+
+    <link name="${frame_id}">
+      <inertial>
+        <mass value="0.015"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+      <visual>
+        <geometry><box size="0.036 0.033 0.009"/></geometry>
+        <material name="${name}_mat"><color rgba="0.1 0.1 0.1 1"/></material>
+      </visual>
+    </link>
+
+    <joint name="${name}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${frame_id}"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+
+    <gazebo reference="${frame_id}">
+
+      <!-- Ruido aproximado (densidades de la hoja de datos del VN-100 x raiz del ancho
+           de banda a 100 Hz). Ajusta con la hoja de datos / Allan variance real. -->
+      <sensor name="${name}_imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>${update_rate}</update_rate>
+        <topic>${gz_ns}/imu</topic>
+        <gz_frame_id>${frame_id}</gz_frame_id>
+        <visualize>false</visualize>
+        <imu>
+          <angular_velocity>
+            <x><noise type="gaussian"><mean>0</mean><stddev>5e-4</stddev><bias_mean>1e-5</bias_mean><bias_stddev>1e-5</bias_stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>5e-4</stddev><bias_mean>1e-5</bias_mean><bias_stddev>1e-5</bias_stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>5e-4</stddev><bias_mean>1e-5</bias_mean><bias_stddev>1e-5</bias_stddev></noise></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><noise type="gaussian"><mean>0</mean><stddev>1.4e-2</stddev><bias_mean>1e-3</bias_mean><bias_stddev>1e-3</bias_stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>1.4e-2</stddev><bias_mean>1e-3</bias_mean><bias_stddev>1e-3</bias_stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>1.4e-2</stddev><bias_mean>1e-3</bias_mean><bias_stddev>1e-3</bias_stddev></noise></z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+
+      <sensor name="${name}_magnetometer" type="magnetometer">
+        <always_on>true</always_on>
+        <update_rate>${update_rate}</update_rate>
+        <topic>${gz_ns}/magnetic</topic>
+        <gz_frame_id>${frame_id}</gz_frame_id>
+        <magnetometer>
+          <x><noise type="gaussian"><mean>0</mean><stddev>1e-7</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>1e-7</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>1e-7</stddev></noise></z>
+        </magnetometer>
+      </sensor>
+
+      <sensor name="${name}_pressure" type="air_pressure">
+        <always_on>true</always_on>
+        <update_rate>${update_rate}</update_rate>
+        <topic>${gz_ns}/pressure</topic>
+        <gz_frame_id>${frame_id}</gz_frame_id>
+        <air_pressure>
+          <reference_altitude>0</reference_altitude>
+          <noise type="gaussian"><mean>0</mean><stddev>10</stddev></noise>
+        </air_pressure>
+      </sensor>
+
+    </gazebo>
+  </xacro:macro>
+</robot>

@@ -1,0 +1,20 @@
+# Puente Gazebo Harmonic -> ROS 2 para el VN-100 simulado.
+# Los nombres ROS replican los del driver real (dawonn/vectornav, rama ros2):
+# comprueba con `ros2 topic list` en hardware real y ajusta si difieren.
+- ros_topic_name: "vectornav/imu"
+  gz_topic_name: "vectornav/imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "vectornav/magnetic"
+  gz_topic_name: "vectornav/magnetic"
+  ros_type_name: "sensor_msgs/msg/MagneticField"
+  gz_type_name: "gz.msgs.Magnetometer"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "vectornav/pressure"
+  gz_topic_name: "vectornav/pressure"
+  ros_type_name: "sensor_msgs/msg/FluidPressure"
+  gz_type_name: "gz.msgs.FluidPressure"
+  direction: GZ_TO_ROS
