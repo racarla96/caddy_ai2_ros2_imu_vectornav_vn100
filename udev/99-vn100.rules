@@ -1,0 +1,4 @@
+# Symlink estable /dev/vn100 para el VN-100 sobre adaptador USB-serie.
+# AJUSTAR idVendor/idProduct (y serial) con:  udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct|serial'
+# Por defecto: FTDI FT232R (0403:6001), habitual en el cable USB del VN-100.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="vn100", MODE="0666", GROUP="dialout"
