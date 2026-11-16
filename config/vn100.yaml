@@ -1,17 +1,18 @@
-# Parámetros del VN-100 real para Caddy AI2 (nodos vectornav y vn_sensor_msgs).
-# Parte de third_party/vectornav/vectornav/config/vectornav.yaml.
-# Los parámetros de ese fichero que no se redefinen aquí quedan en los valores por defecto del nodo.
-# Para fijar tasa/campos concretos copia ahí el bloque BO1 del yaml original y ajústalo.
+# Parámetros del VN-100 real para Caddy AI2 (nodo `vectornav`, fork de Robotnik).
+# Referencia de todos los parámetros: third_party/vectornav/config/vn100.yaml (formato ROS 1).
 vectornav:
   ros__parameters:
-    port: "/dev/vn100"
-    baud: 921600               # medido: 115200 → 20 Hz, 230400 → 50, 460800 → 100, 921600 → 200 Hz máx.
-    BO1:
-      asyncMode: 1             # PORT1 solo. Con 3 (BOTH) el sensor valida contra el puerto 2 (115200)
-                               # y responde InsufficientBaudRate por encima de 20 Hz.
-      rateDivisor: 4           # 800 Hz / 4 = 200 Hz. 400 Hz no responde con commonField 0x7FFF.
-    reconnect_ms: 500
-    frame_id: "imu_vn100_link"   # = robot_params.yaml sensors.imu_vn100.frame_id
-vn_sensor_msgs:
-  ros__parameters:
-    use_enu: true   # ENU (REP-103) en vez de NED nativo del VN-100
+    serial_port: "/dev/vn100"        # regla udev: udev/99-vn100.rules
+    serial_baud: 921600              # medido: 115200 → 20 Hz, 230400 → 50, 460800 → 100, 921600 → 200
+    async_output_rate: 200           # Hz publicados. Admitidos: 1 2 4 5 10 20 25 40 50 100 200
+    imu_output_rate: 200             # Hz del mensaje Imu
+    fixed_imu_rate: 800              # tasa interna del VN-100 (800 Hz de fábrica)
+    adjust_ros_timestamp: true       # sello del reloj del sensor: quita el jitter del USB
+    max_invalid_packets: 500         # paquetes inválidos seguidos antes de parar (-1 = nunca)
+    frame_id: "imu_vn100_link"       # = robot_params.yaml sensors.imu_vn100.frame_id
+    # Convención de ejes de la salida. Sobrescribible con: frame_convention:=<valor> en el launch.
+    #   rep103   mundo ENU, cuerpo FLU (x delante, y izquierda, z arriba)  <- convención ROS (REP-103/145)
+    #   enu_rfu  mundo ENU, cuerpo RFU (x derecha, y delante, z arriba)    (lo que daba dawonn/vectornav use_enu)
+    #   nwu      mundo NWU, cuerpo FLU
+    #   ned      sensor en bruto, NED/FRD
+    frame_convention: "rep103"
