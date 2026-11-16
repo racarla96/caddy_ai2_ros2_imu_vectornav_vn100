@@ -5,7 +5,11 @@
 vectornav:
   ros__parameters:
     port: "/dev/vn100"
-    baud: 115200
+    baud: 921600               # medido: 115200 → 20 Hz, 230400 → 50, 460800 → 100, 921600 → 200 Hz máx.
+    BO1:
+      asyncMode: 1             # PORT1 solo. Con 3 (BOTH) el sensor valida contra el puerto 2 (115200)
+                               # y responde InsufficientBaudRate por encima de 20 Hz.
+      rateDivisor: 4           # 800 Hz / 4 = 200 Hz. 400 Hz no responde con commonField 0x7FFF.
     reconnect_ms: 500
     frame_id: "imu_vn100_link"   # = robot_params.yaml sensors.imu_vn100.frame_id
 vn_sensor_msgs:

@@ -33,6 +33,30 @@ ros2 launch caddy_ai2_ros2_imu_vectornav_vn100 vn100_sim.launch.py
 
 Publica `vectornav/imu`, `vectornav/magnetic` y `vectornav/pressure` con `frame_id: vectornav`, igual que el driver real, así el resto del stack no cambia entre simulación y hardware.
 
+## Frecuencia y baudios (medido en la ZED Box Orin NX)
+
+`config/vn100.yaml` deja el sensor a **921600 baudios y 200 Hz** (`BO1.rateDivisor: 4`,
+800 Hz / 4) con `asyncMode: 1` (solo puerto serie 1). Verificado de extremo a extremo:
+`/vectornav/imu` 200.0 Hz, hueco máximo 7.6 ms, `/vectornav/magnetic` 199.9 Hz; CPU ~18 % +
+~9 % de un núcleo (`vn_sensor_msgs` + `vectornav`).
+
+Máximo que responde con `commonField: 0x7FFF` (todos los campos comunes):
+
+| Baudios | Máximo | Primer fallo |
+|---|---|---|
+| 115200 | 20 Hz | 50 Hz |
+| 230400 | 50 Hz | 100 Hz |
+| 460800 | 100 Hz | 200 Hz |
+| 921600 | **200 Hz** | 400 Hz |
+
+- El límite sigue la velocidad del puerto: cada mensaje es grande por pedir todos los campos.
+  Pidiendo solo los necesarios (no probado) subiría el máximo.
+- `asyncMode: 3` (BOTH, el valor por defecto del driver) hace que el sensor responda
+  `InsufficientBaudRate` por encima de 20 Hz aunque el baudrate sea alto, y el driver aborta.
+  Usar `1` (puerto 1).
+- Nada de esto se graba en la memoria del sensor: al reiniciarlo vuelve a 115200 y 20 Hz,
+  y el driver lo reconfigura al conectar.
+
 ## Pendiente de verificar
 
 - Nombres exactos de topics del driver real (`ros2 topic list` con el sensor conectado) y rama/dependencias del repo en Jazzy.
