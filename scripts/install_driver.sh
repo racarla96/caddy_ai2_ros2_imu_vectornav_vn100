@@ -8,7 +8,8 @@
 #   --no-sim     no instala ros_gz (recomendado en la Jetson)
 #   --no-udev    no instala la regla udev (/dev/vn100)
 # El código fuente NO se copia: se compila directamente desde este repo y su
-# submódulo third_party/vectornav (dawonn/vectornav, rama ros2).
+# submódulo third_party/vectornav (fork racarla96/vectornav, rama robotnik-jazzy-devel:
+# RobotnikAutomation/vectornav + opción frame_convention).
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -37,7 +38,7 @@ fi
 
 echo "==> Submódulos"
 git -C "${REPO}" submodule update --init --recursive
-[[ -f "${REPO}/third_party/vectornav/vectornav/package.xml" ]] || { echo "ERROR: submódulo vectornav vacío"; exit 1; }
+[[ -f "${REPO}/third_party/vectornav/package.xml" ]] || { echo "ERROR: submódulo vectornav vacío"; exit 1; }
 
 echo "==> Dependencias del sistema"
 sudo apt-get update

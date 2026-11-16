@@ -6,7 +6,7 @@ desarrollo y en la Jetson Orin NX / ZedBox (aarch64). Jazzy es requisito duro.
 
 ## Objetivo
 Paquete autocontenido para el IMU VectorNav VN-100(-VT):
-1. Instalar el driver real (submódulo `third_party/vectornav` = dawonn/vectornav, rama `ros2`).
+1. Instalar el driver real (submódulo `third_party/vectornav` = fork `racarla96/vectornav`, rama `robotnik-jazzy-devel`: Robotnik `jazzy-devel` + `frame_convention`).
 2. Simularlo en Gazebo Harmonic con los MISMOS topics que el driver real, para que el stack no cambie entre sim y hardware.
 
 ## Convenciones de Rafa
@@ -20,8 +20,8 @@ Paquete autocontenido para el IMU VectorNav VN-100(-VT):
 
 ## Hecho y verificado
 - Topics del driver real (leídos del código): `vectornav/imu`, `vectornav/magnetic`, `vectornav/pressure`,
-  `vectornav/temperature`, `vectornav/gnss`, `vectornav/raw/*`. Nodos: `vectornav` (raw) y `vn_sensor_msgs`
-  (convierte a sensor_msgs). Parámetros: `port`, `baud` (115200), `frame_id` ("vectornav"), `use_enu`.
+  `vectornav/temperature` (el nodo único `vectornav_node` publica `data`, `mag`, `atm_pressure` y se remapean en el launch).
+  Parámetros: `serial_port`, `serial_baud` (921600), `async_output_rate` (200), `frame_id`, `frame_convention` (rep103|enu_rfu|nwu|ned).
 - Launch real: `vn100.launch.py` (arg `port`, por defecto `/dev/vn100`). Regla udev en `udev/99-vn100.rules`
   (idVendor/idProduct por defecto FTDI 0403:6001: AJUSTAR con `udevadm info`).
 - Sim: `urdf/vn100.urdf.xacro` (macro `vn100`: IMU, magnetómetro, presión) + `config/vn100_gz_bridge.yaml`

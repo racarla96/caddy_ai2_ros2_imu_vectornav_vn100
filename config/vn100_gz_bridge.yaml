@@ -1,6 +1,6 @@
 # Puente Gazebo Harmonic -> ROS 2 para el VN-100 simulado.
-# Los nombres ROS replican los del driver real (dawonn/vectornav, rama ros2):
-# comprueba con `ros2 topic list` en hardware real y ajusta si difieren.
+# Los nombres ROS replican los del driver real (fork de Robotnik, con remapeo en vn100.launch.py)
+# y el sistema de ejes es el mismo que la salida rep103 del driver (mundo ENU, cuerpo FLU).
 - ros_topic_name: "vectornav/imu"
   gz_topic_name: "vectornav/imu"
   ros_type_name: "sensor_msgs/msg/Imu"

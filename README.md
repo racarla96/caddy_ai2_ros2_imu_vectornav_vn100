@@ -10,10 +10,10 @@ Licencia: CC BY 4.0 — racarla96 - Rafael Carbonell Lázaro.
 ./scripts/install_driver.sh --ws ~/ros2_ws          # driver + ros_gz
 ./scripts/install_driver.sh --ws ~/ros2_ws --no-sim # solo driver (ZedBox)
 source ~/ros2_ws/install/setup.bash
-ros2 launch vectornav vectornav.launch.py
+ros2 launch caddy_ai2_ros2_imu_vectornav_vn100 vn100.launch.py
 ```
 
-Clona `dawonn/vectornav` (rama `ros2`, configurable con `VN_REPO` / `VN_BRANCH`), resuelve dependencias con rosdep, compila con colcon y añade el usuario a `dialout`.
+Compila el submódulo `third_party/vectornav` (fork `racarla96/vectornav`, rama `robotnik-jazzy-devel`: driver de [RobotnikAutomation/vectornav](https://github.com/RobotnikAutomation/vectornav) `jazzy-devel` más la opción `frame_convention`), resuelve dependencias con rosdep, compila con colcon, instala la regla udev (`/dev/vn100`) y añade el usuario a `dialout`.
 
 ## 2. Simulación en Gazebo Harmonic
 
@@ -33,31 +33,53 @@ ros2 launch caddy_ai2_ros2_imu_vectornav_vn100 vn100_sim.launch.py
 
 Publica `vectornav/imu`, `vectornav/magnetic` y `vectornav/pressure` con `frame_id: vectornav`, igual que el driver real, así el resto del stack no cambia entre simulación y hardware.
 
-## Frecuencia y baudios (medido en la ZED Box Orin NX)
+## Driver y frecuencia (medido en la ZED Box Orin NX)
 
-`config/vn100.yaml` deja el sensor a **921600 baudios y 200 Hz** (`BO1.rateDivisor: 4`,
-800 Hz / 4) con `asyncMode: 1` (solo puerto serie 1). Verificado de extremo a extremo:
-`/vectornav/imu` 200.0 Hz, hueco máximo 7.6 ms, `/vectornav/magnetic` 199.9 Hz; CPU ~18 % +
-~9 % de un núcleo (`vn_sensor_msgs` + `vectornav`).
+Un solo nodo, `vectornav_node` (Robotnik `jazzy-devel`), a **921600 baudios y 200 Hz** con
+salida solo por el puerto 1. Topics, remapeados a los de la simulación: `vectornav/imu`,
+`vectornav/magnetic`, `vectornav/pressure`, `vectornav/temperature`.
 
-Máximo que responde con `commonField: 0x7FFF` (todos los campos comunes):
+Comparado con el driver anterior (`dawonn/vectornav` `ros2` + `vn_sensor_msgs`), mismo sensor y
+configuración (VN-100T-CR, FW 3.1.0.0):
 
-| Baudios | Máximo | Primer fallo |
+| | `dawonn` + `vn_sensor_msgs` | Robotnik `jazzy-devel` |
 |---|---|---|
-| 115200 | 20 Hz | 50 Hz |
-| 230400 | 50 Hz | 100 Hz |
-| 460800 | 100 Hz | 200 Hz |
-| 921600 | **200 Hz** | 400 Hz |
+| Frecuencia `/vectornav/imu` | 200,0 Hz | 200,0 Hz |
+| Hueco máximo | 7,6 ms | 6,1 ms |
+| CPU | 24,6 % de un núcleo (2 nodos) | 6,2 % (1 nodo) |
 
-- El límite sigue la velocidad del puerto: cada mensaje es grande por pedir todos los campos.
-  Pidiendo solo los necesarios (no probado) subiría el máximo.
-- `asyncMode: 3` (BOTH, el valor por defecto del driver) hace que el sensor responda
-  `InsufficientBaudRate` por encima de 20 Hz aunque el baudrate sea alto, y el driver aborta.
-  Usar `1` (puerto 1).
-- Nada de esto se graba en la memoria del sensor: al reiniciarlo vuelve a 115200 y 20 Hz,
-  y el driver lo reconfigura al conectar.
+Con el driver anterior el máximo era 200 Hz a 921600 baudios y bajaba con el baudrate
+(115200 → 20 Hz, 230400 → 50, 460800 → 100), y dejaba `asyncMode: 3` (ambos puertos), con el
+que el sensor responde `InsufficientBaudRate` por encima de 20 Hz. El fork de Robotnik usa
+`ASYNCMODE_PORT1` y pide menos campos. Más de 200 Hz no está probado (su parámetro solo admite
+hasta 200).
+
+Nada de esto se graba en la memoria del sensor: al reiniciarlo vuelve a 115200 y 20 Hz, y el
+driver lo reconfigura al conectar.
+
+## Convención de ejes (`frame_convention`)
+
+Se elige con el argumento del launch o en `config/vn100.yaml`:
+
+```bash
+ros2 launch caddy_ai2_ros2_imu_vectornav_vn100 vn100.launch.py frame_convention:=rep103
+```
+
+| Valor | Mundo | Cuerpo | |
+|---|---|---|---|
+| `rep103` (por defecto) | ENU | FLU: x delante, y izquierda, z arriba | **Convención ROS (REP-103/145)**; la misma que la simulación |
+| `enu_rfu` | ENU | RFU: x derecha, y delante, z arriba | Lo que publicaba `dawonn/vectornav` con `use_enu` |
+| `nwu` | NWU | FLU | La de Robotnik |
+| `ned` | NED | FRD | Sensor en bruto |
+
+`rep103` y `nwu` solo difieren en el mundo: `yaw_enu = yaw_nwu + 90°`. `frame_convention` es un
+parche nuestro sobre el fork de Robotnik; si se deja vacío, valen sus parámetros `tf_ned_to_*`.
+
+Comprobado con la IMU quieta y sin tocarla entre capturas: `enu_rfu` da exactamente la misma
+orientación y aceleración que el driver anterior; `rep103` da el mismo balanceo y cabeceo que
+`nwu` y un rumbo +90° respecto a él, con la aceleración en +z (arriba). **Pendiente:** moverla
+físicamente para comprobar signos y sentido de giro.
 
 ## Pendiente de verificar
 
-- Nombres exactos de topics del driver real (`ros2 topic list` con el sensor conectado) y rama/dependencias del repo en Jazzy.
 - Ruido del URDF: valores aproximados a partir de la hoja de datos; afinar con el sensor real.
