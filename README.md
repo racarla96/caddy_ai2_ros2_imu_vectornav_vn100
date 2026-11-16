@@ -80,6 +80,13 @@ orientación y aceleración que el driver anterior; `rep103` da el mismo balance
 `nwu` y un rumbo +90° respecto a él, con la aceleración en +z (arriba). **Pendiente:** moverla
 físicamente para comprobar signos y sentido de giro.
 
+## Información adicional (opcional)
+
+[`docs/VN100_notas_manual.md`](docs/VN100_notas_manual.md): notas del manual del VN-100 y de las
+pruebas (tasas internas, divisor de salida, baudios, error `InsufficientBaudRate`, tamaño del
+mensaje). No hace falta para usar el paquete. Incluye una idea **no implementada**: subir a
+400 Hz pidiendo menos campos.
+
 ## Pendiente de verificar
 
 - Ruido del URDF: valores aproximados a partir de la hoja de datos; afinar con el sensor real.

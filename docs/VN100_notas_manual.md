@@ -63,6 +63,10 @@ Con eso, los resultados medidos (driver `dawonn`, todos los campos comunes, 10 b
 entre medias y no lo sé. Para subir de 200 Hz hay que pedir menos campos: p. ej. solo cuaternión,
 velocidad angular y aceleración son ~50 bytes, y 400 Hz a 921600 baudios ocuparía ~22 %.
 
+> **Idea no implementada.** Con el driver de Robotnik, subir a 400 Hz exigiría pedir solo los
+> campos necesarios y ampliar su parámetro `async_output_rate`, que hoy admite hasta 200 Hz. No se
+> ha probado ni hace falta ahora: la configuración por defecto del paquete es 200 Hz.
+
 ## Diagnóstico en el propio sensor
 
 El manual (p. 79-80) muestra un volcado de diagnóstico con *Serial 1/2 TX Bandwidth Usage* y
